@@ -2,8 +2,10 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import bodyParser from "body-parser";
-import "dotenv/config";
+
 import urlRouter from "./routes/urlRoutes.js";
+//can be working without it
+
 import { sequelize } from "./sequelize.js";
 
 const app = express();
@@ -28,3 +30,6 @@ sequelize.sync({ force: false }).then(() => {
     console.log("Server is running on port 3000");
   });
 });
+
+
+
