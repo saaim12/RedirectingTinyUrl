@@ -1,9 +1,14 @@
-import { Router } from "express"; 
-import { redirectUrl, shorten } from "../controllers/urlController";
+import express from "express";
+import { shortenUrl, redirectToLongUrl,getOriginalUrl } from "../controllers/urlController.js";
 
-const router = Router();
-router.post("/shorten", shorten)
-router.get("/s/:shortId", redirectUrl)
+const router = express.Router();
 
+// Route to shorten a URL
+router.post("/shorten", shortenUrl);
+
+// Route to redirect to the long URL
+router.get("/:hash", redirectToLongUrl);
+// Route to fetch the original long URL without redirection
+router.get("/fetch/:hash", getOriginalUrl);
 
 export default router;

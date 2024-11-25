@@ -1,60 +1,73 @@
-// controllers/shortUrl.controller.js
-import { nanoid } from 'nanoid';
-import moment from 'moment';
-import { Url } from '../models/Url';
+import { URL } from "../models/URL.js";
+import { nanoid } from "nanoid"; // For generating short IDs
+import axios from "axios";
 
-export const shorten = async (req, res) => {
-    const { url } = req.body;
-    
-    // Validate URL
-    if (!url || !/^https?:\/\/.+/.test(url)) {
-        return res.status(400).json({ error: 'Invalid URL format' });
+// Generate a short URL
+export const shortenUrl = async (req, res) => {
+  try {
+    const { longUrl } = req.body;
+
+    if (!longUrl) {
+      return res.status(400).json({ message: "Long URL is required" });
     }
 
-    const shortId = nanoid(8); // Generate unique short ID
-    const shortUrl = `${req.protocol}://${req.get('host')}/s/${shortId}`; // Short URL format
-    const expiry = moment().add(1, 'hour').toISOString(); // Expiry set to 1 hour from now
+    const shortUrl = nanoid(8); // Generate an 8-character hash
+    await URL.create({ longUrl, shortUrl });
 
-    // Save URL data to database
-    const newUrl = await Url.create({
-        originalUrl: url,
-        shortId,
-        shortUrl,
-        expiry
-    });
-
-    // Return the shortened URL in the response
-    res.status(200).json({
-        originalUrl: url,
-        shortUrl,
-        expiry
-    });
+    res.json({ longUrl, shortUrl: `http://localhost:3000/${shortUrl}` });
+  } catch (error) {
+    console.error("Error shortening URL:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-export const redirectUrl = async (req, res) => {
+// Redirect to the long URL
+
+export const redirectToLongUrl = async (req, res) => {
     try {
-        const { shortId } = req.params;
-
-        // Find the URL record by shortId
-        const urlRecord = await Url.findOne({ where: { shortId } });
-
-        // Check if the URL record exists
-        if (!urlRecord) {
-            return res.status(404).json({ message: 'URL not found' });
-        }
-
-        // Check if the URL has expired
-        const expiry = moment(urlRecord.expiry);
-        if (expiry.isBefore(moment())) {
-            return res.status(404).json({ message: 'URL has expired' });
-        }
-
-        // Redirect to the original URL
-        res.redirect(urlRecord.originalUrl);
-
+      const { hash } = req.params;
+  
+      // Fetch the URL data from the database
+      const urlData = await URL.findOne({ where: { shortUrl: hash } });
+  
+      if (!urlData) {
+        return res.status(404).json({ message: "Short URL not found" });
+      }
+  
+      // Fetch the content of the long URL
+      const response = await axios.get(urlData.longUrl);
+  
+      // Set headers from the fetched URL's response
+      res.set(response.headers);
+  
+      // Send the content of the long URL
+      res.send(response.data);
     } catch (error) {
-        // Handle any other errors
-        console.error("Error redirecting URL:", error);
-        res.status(500).json({ message: "An error occurred during redirection" });
+      console.error("Error fetching long URL content:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
-};
+  };
+  export const getOriginalUrl = async (req, res) => {
+    try {
+      const { hash } = req.params;
+  
+      // Validate the hash
+      if (!hash) {
+        return res.status(400).json({ message: "Hash parameter is missing" });
+      }
+  
+      // Fetch the URL data from the database
+      const urlData = await URL.findOne({ where: { shortUrl: hash } });
+  
+      if (!urlData) {
+        return res.status(404).json({ message: "Short URL not found" });
+      }
+  
+      // Respond with the original long URL
+      return res.status(200).json({ longUrl: urlData.longUrl });
+    } catch (error) {
+      console.error("Error fetching original URL:", error.message);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  };
+  

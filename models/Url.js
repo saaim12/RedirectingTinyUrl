@@ -1,14 +1,14 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../sequelize.js";
 
-
-export const Url = sequelize.define('Url', {
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-    },
-    originalUrl: DataTypes.STRING,
-    shortId: DataTypes.STRING,
-    expiry: DataTypes.DATE
+export const URL = sequelize.define("URL", {
+  longUrl: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  shortUrl: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
 });

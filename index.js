@@ -1,32 +1,30 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
+import bodyParser from "body-parser";
 import "dotenv/config";
-import urlRouter from "./routes/urlRoutes"
-import { sequelize } from "./sequelize";
+import urlRouter from "./routes/urlRoutes.js";
+import { sequelize } from "./sequelize.js";
 
 const app = express();
 
-//middleware
-app.use(express.json())
-app.use(helmet())
-app.use(cors())
-app.use((req,res,next)=>{
-    console.log(req.path , req.method)
-    next();
-})
+// Middleware
+app.use(bodyParser.json());
+app.use(helmet());
+app.use(cors());
 
-//Routes
-app.use("/" , urlRouter);
-sequelize.sync({
-    force: true,
+// Logging Middleware
+app.use((req, res, next) => {
+  console.log(req.method, req.path);
+  next();
+});
 
-}).then(()=>{
+// Routes
+app.use("/", urlRouter);
 
-    app.listen(3001 , ()=>{
-        console.log("start")
-    })
-
-})
-
-
+// Start Server and Sync Database
+sequelize.sync({ force: false }).then(() => {
+  app.listen(3000, () => {
+    console.log("Server is running on port 3000");
+  });
+});
