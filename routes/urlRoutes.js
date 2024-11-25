@@ -8,7 +8,7 @@ router.post("/shorten", shortenUrl);
 
 // Route to redirect to the long URL
 router.get("/:hash", redirectToLongUrl);
-// Route to fetch the original long URL and then send its data to the shorlt url
+// Route to fetch the original long URL and then send its data to shorl url
 router.get("/fetch/:hash", getOriginalUrl);
 
 export default router;
